@@ -1,0 +1,414 @@
+<!doctype html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>RoV ตารางแก้ทาง</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&family=Kanit:wght@500;600&display=swap" rel="stylesheet">
+<style>
+/* Draft-time tool, read at a glance mid-pick: night-blue arena canvas, RoV gold for
+   selection and stars, tier ladder hot (SS) -> cold (B) carried by each portrait's frame. */
+:root {
+  --bg: #eef0f7; --bg-2: #e3e6f1; --panel: #ffffff; --panel-2: #f2f3f9; --line: #d6dae8;
+  --text: #141828; --muted: #5a6280;
+  --gold: #8a5a00; --gold-ink: #ffffff; --gold-soft: #fbf1d9; --gold-line: #e9cf8d;
+  --star: #c98a00; --star-off: #cfd3e2;
+  --t-ss: #e2334f; --t-s: #e8641b; --t-a: #1f86d6; --t-b: #7d86a3; --t-c: #9aa1b8;
+  --shadow: 0 12px 40px #1b2240; --display: "Kanit", "IBM Plex Sans Thai", system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0a0e1c; --bg-2: #0f1528; --panel: #131a30; --panel-2: #1a2340; --line: #26304f;
+    --text: #eef1fb; --muted: #94a0c4;
+    --gold: #f2bf4b; --gold-ink: #1a1405; --gold-soft: #2a2412; --gold-line: #5c4a1b;
+    --star: #f5c451; --star-off: #34405f;
+    --t-ss: #ff4f6d; --t-s: #ff8a3d; --t-a: #43b3ff; --t-b: #8d97b8; --t-c: #6d7795;
+    --shadow: 0 12px 40px #000000;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0a0e1c; --bg-2: #0f1528; --panel: #131a30; --panel-2: #1a2340; --line: #26304f;
+  --text: #eef1fb; --muted: #94a0c4;
+  --gold: #f2bf4b; --gold-ink: #1a1405; --gold-soft: #2a2412; --gold-line: #5c4a1b;
+  --star: #f5c451; --star-off: #34405f;
+  --t-ss: #ff4f6d; --t-s: #ff8a3d; --t-a: #43b3ff; --t-b: #8d97b8; --t-c: #6d7795;
+  --shadow: 0 12px 40px #000000;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html, body { margin: 0; max-width: 100%; overflow-x: clip; }
+body {
+  background: radial-gradient(1200px 500px at 50% -200px, var(--bg-2), transparent 70%), var(--bg);
+  background-color: var(--bg); color: var(--text);
+  font-family: "IBM Plex Sans Thai", system-ui, sans-serif; font-size: 15px; line-height: 1.5;
+}
+::selection { background: var(--gold); color: var(--gold-ink); }
+* { scrollbar-color: var(--line) transparent; scrollbar-width: thin; }
+button { font: inherit; color: inherit; }
+button:focus-visible, input:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+.wrap {
+  max-width: 1400px; margin: 0 auto; padding-block: 40px 60px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+
+/* Header */
+.top { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px; margin-bottom: 12px; }
+h1 { font-family: var(--display); font-weight: 600; font-size: 24px; letter-spacing: -0.01em; margin: 0; line-height: 1.1; }
+h1 em { font-style: normal; color: var(--gold); }
+.meta { color: var(--muted); font-size: 12px; font-variant-numeric: tabular-nums; }
+.views { margin-left: auto; display: flex; background: var(--panel); border: 1px solid var(--line); padding: 3px; border-radius: 11px; }
+.views button { border: 0; background: none; color: var(--muted); font-weight: 600; font-size: 14px; padding: 6px 14px; border-radius: 8px; cursor: pointer; transition: color .15s, background-color .15s; }
+.views button:hover { color: var(--text); }
+.views button.on { background: var(--panel-2); color: var(--text); }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+
+/* Lane tabs: big, sticky, thumb-friendly */
+.lanes {
+  position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--bg);
+  display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 6px; padding: 8px 0 12px;
+}
+.lanes button {
+  border: 1px solid var(--line); background: var(--panel); border-radius: 11px; padding: 10px 4px;
+  font-family: var(--display); font-weight: 500; font-size: 16px; cursor: pointer; white-space: nowrap;
+  min-width: 0; overflow: hidden; text-overflow: ellipsis; transition: border-color .15s, background-color .15s, color .15s;
+}
+.lanes button:hover { border-color: var(--gold-line); }
+.lanes button.on { background: var(--gold); color: var(--gold-ink); border-color: var(--gold); font-weight: 600; }
+
+/* Picker grid + detail */
+.pick { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 20px; align-items: start; }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 12px 6px; padding-top: 2px; }
+.grid h4 { grid-column: 1 / -1; margin: 14px 0 0; font-size: 12px; color: var(--muted); font-weight: 600; letter-spacing: .02em; }
+.hb {
+  --tc: var(--line);
+  border: 0; background: none; padding: 0; cursor: pointer; min-width: 0;
+  display: flex; flex-direction: column; align-items: center; gap: 5px;
+}
+.frame { position: relative; display: block; border-radius: 15px; padding: 2px; background: var(--tc); transition: transform .15s ease-out, box-shadow .15s; }
+.hb .av { display: block; width: 62px; height: 62px; border-radius: 13px; border: 0; font-size: 14px; }
+.hb:hover .frame { transform: translateY(-2px); box-shadow: 0 6px 16px -6px var(--tc); }
+.hb:active .frame { transform: scale(.95); }
+.hb.sel .frame { box-shadow: 0 0 0 3px var(--bg), 0 0 0 5px var(--gold); }
+.hb .tier { position: absolute; right: 4px; bottom: 4px; margin: 0; }
+.hb .nm { font-size: 12px; line-height: 1.2; max-width: 100%; text-align: center;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; overflow-wrap: anywhere; }
+.t-SS { --tc: var(--t-ss); } .t-S { --tc: var(--t-s); } .t-A { --tc: var(--t-a); } .t-B { --tc: var(--t-b); } .t-C { --tc: var(--t-c); }
+
+.detail { position: sticky; top: 76px; max-height: calc(100vh - 92px); overflow-y: auto;
+  background: var(--panel); border: 1px solid var(--line); border-radius: 16px; padding: 16px; }
+.detail .empty { color: var(--muted); text-align: center; padding: 48px 10px; }
+.dh { display: flex; align-items: center; gap: 14px; margin-bottom: 14px; }
+.dh .frame { flex: none; }
+.dh .av { display: block; width: 68px; height: 68px; border-radius: 13px; border: 0; }
+.dh b { font-family: var(--display); font-weight: 600; font-size: 24px; line-height: 1.15; display: flex; align-items: center; gap: 8px; }
+.dh b .tier { font-size: 12px; padding: 2px 7px; }
+.dh small { color: var(--muted); font-size: 13px; display: block; margin-top: 2px; }
+.dh .close { margin-left: auto; border: 0; background: var(--panel-2); width: 40px; height: 40px; border-radius: 50%; cursor: pointer; flex: none; display: grid; place-items: center; color: var(--muted); }
+.dh .close svg { width: 18px; height: 18px; }
+.dlead { font-size: 13px; color: var(--muted); margin-bottom: 4px; }
+.sec { margin-top: 14px; }
+.sec h5 { margin: 0 0 8px; font-size: 13px; color: var(--muted); font-weight: 600; }
+.sec.same { background: var(--gold-soft); border: 1px solid var(--gold-line); border-radius: 14px; padding: 12px; margin-left: -4px; margin-right: -4px; }
+.sec.same h5 { color: var(--gold); font-family: var(--display); font-weight: 600; font-size: 15px; }
+.ctiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(84px, 1fr)); gap: 10px 6px; }
+.ct {
+  --tc: var(--line);
+  border: 0; background: none; padding: 6px 2px; cursor: pointer; border-radius: 12px; min-width: 0;
+  display: flex; flex-direction: column; align-items: center; gap: 4px; text-align: center; transition: background-color .15s;
+}
+.ct:hover { background: var(--panel-2); }
+.sec.same .ct:hover { background: color-mix(in srgb, var(--gold) 14%, transparent); }
+.ct .frame { border-radius: 13px; padding: 2px; }
+.ct .av { display: block; width: 50px; height: 50px; border-radius: 11px; border: 0; }
+.ct .nm { font-size: 12px; line-height: 1.2; max-width: 100%; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+
+/* Shared bits */
+.av {
+  width: 40px; height: 40px; border-radius: 50%; object-fit: cover; flex: none;
+  background: var(--panel-2); border: 1px solid var(--line);
+  display: inline-flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 700; color: var(--muted); overflow: hidden;
+}
+.tier {
+  display: inline-block; font-family: var(--display); font-size: 10px; font-weight: 600; line-height: 1.5;
+  padding: 0 5px; border-radius: 5px; color: #fff; letter-spacing: .02em;
+  box-shadow: 0 0 0 1.5px var(--panel); vertical-align: middle;
+}
+.tier-Sp, .tier-SS { background: var(--t-ss); } .tier-S { background: var(--t-s); }
+.tier-A { background: var(--t-a); } .tier-B { background: var(--t-b); } .tier-C { background: var(--t-c); }
+.stars { display: inline-flex; gap: 1px; line-height: 0; }
+.stars svg { width: 12px; height: 12px; fill: var(--star); }
+.stars svg.off { fill: var(--star-off); }
+.dash { color: var(--muted); }
+.nodata { font-size: 12px; color: var(--muted); display: block; }
+.legend {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 6px 18px; font-size: 12px; color: var(--muted);
+  border-top: 1px solid var(--line); margin-top: 22px; padding-top: 12px;
+}
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+
+/* Full table view */
+.controls { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 12px; }
+input[type=search] {
+  flex: 1 1 220px; min-width: 0; font: inherit; color: var(--text); background: var(--panel); caret-color: var(--gold);
+  border: 1px solid var(--line); border-radius: 10px; padding: 9px 12px;
+}
+input[type=search]::placeholder { color: var(--muted); }
+.table-wrap { overflow: auto; max-height: calc(100vh - 140px); background: var(--panel); border: 1px solid var(--line); border-radius: 14px; }
+table { border-collapse: separate; border-spacing: 0; width: 100%; }
+th, td { text-align: left; vertical-align: middle; padding: 8px 10px; border-bottom: 1px solid var(--line); }
+tr.lane-row td { position: sticky; top: 37px; z-index: 1; background: var(--panel-2); font-family: var(--display); font-weight: 600; font-size: 14px; color: var(--gold); padding: 6px 12px; }
+tbody tr:not(.lane-row):hover td { background: color-mix(in srgb, var(--panel-2) 60%, var(--panel)); }
+tbody tr:not(.lane-row):hover td.same { background: color-mix(in srgb, var(--gold) 16%, var(--panel)); }
+thead th { position: sticky; top: 0; z-index: 2; background: var(--panel); font-size: 12px; color: var(--muted); font-weight: 600; white-space: nowrap; }
+th:first-child, td:first-child { position: sticky; left: 0; z-index: 1; background: var(--panel); border-right: 1px solid var(--line); }
+thead th:first-child { z-index: 3; }
+th.same { color: var(--gold); }
+td.same { background: var(--gold-soft); }
+.hero { display: flex; align-items: center; gap: 10px; min-width: 160px; cursor: pointer; }
+.hero .frame { border-radius: 11px; padding: 2px; }
+.hero .av { display: block; width: 40px; height: 40px; border-radius: 9px; border: 0; }
+.hero b { display: flex; align-items: center; gap: 6px; font-weight: 600; line-height: 1.3; }
+.hero .alt { color: var(--muted); font-size: 12px; display: block; line-height: 1.3; }
+.ctr { display: flex; flex-wrap: wrap; gap: 4px; min-width: 150px; }
+td.same .ctr { min-width: 260px; }
+.c { display: inline-flex; align-items: center; gap: 6px; padding: 3px 8px 3px 3px; border-radius: 9px; cursor: pointer; background: var(--panel-2); border: 1px solid transparent; }
+td.same .c { background: var(--panel); }
+.c.s3 { border-color: var(--gold-line); }
+.c:hover { border-color: var(--gold); }
+.c .av { width: 26px; height: 26px; border-radius: 7px; font-size: 9px; border: 0; }
+.c .stars svg { width: 9px; height: 9px; }
+.c .nm { font-size: 12px; line-height: 1.15; white-space: nowrap; display: block; }
+.tlanes { display: flex; flex-wrap: wrap; gap: 4px; }
+.tlanes button { border: 1px solid var(--line); background: var(--panel); border-radius: 9px; padding: 7px 12px; font-weight: 600; font-size: 13px; cursor: pointer; }
+.tlanes button.on { background: var(--gold); color: var(--gold-ink); border-color: var(--gold); }
+
+/* Phone: detail becomes a bottom sheet */
+.backdrop { display: none; }
+@media (max-width: 899px) {
+  .pick { grid-template-columns: 1fr; }
+  .detail {
+    position: fixed; left: 0; right: 0; bottom: 0; top: auto; z-index: 20;
+    max-height: 88vh; border-radius: 20px 20px 0 0; border-bottom: 0;
+    padding: 16px max(16px, env(safe-area-inset-right, 0px)) calc(22px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px));
+    box-shadow: 0 -12px 40px -12px #000; transform: translateY(105%); transition: transform .26s cubic-bezier(.16, 1, .3, 1);
+  }
+  body.sheet-open .detail { transform: none; }
+  .backdrop { display: block; position: fixed; inset: 0; z-index: 19; background: rgb(5 8 18 / .6); opacity: 0; pointer-events: none; transition: opacity .2s; }
+  body.sheet-open .backdrop { opacity: 1; pointer-events: auto; }
+  body.sheet-open { overflow: hidden; }
+  .detail .empty { display: none; }
+  .views button { padding: 6px 10px; }
+  .lanes button { font-size: 15px; padding: 10px 2px; }
+}
+@media (max-width: 520px) {
+  .grid { grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px 4px; }
+  .hb .av { width: 54px; height: 54px; border-radius: 12px; }
+  .frame { border-radius: 14px; }
+  .hb .nm { font-size: 11px; }
+  .hb .tier { right: 3px; bottom: 3px; font-size: 9px; padding: 0 4px; }
+  .ctiles { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .ct .av { width: 46px; height: 46px; }
+  h1 { font-size: 21px; }
+  .lanes { gap: 4px; }
+  .lanes button { font-size: 13px; padding: 9px 0; text-overflow: clip; }
+}
+@media (min-width: 900px) { .dh .close { display: none; } }
+</style>
+<div class="wrap">
+  <div class="top">
+    <h1>RoV <em>แก้ทาง</em></h1>
+    <span class="meta" id="meta"></span>
+    <nav class="views">
+      <button data-v="pick" class="on">จิ้มดู</button>
+      <button data-v="table">ตารางเต็ม</button>
+    </nav>
+  </div>
+
+  <!-- Quick picker -->
+  <section id="v-pick">
+    <div class="lanes" id="lanes"></div>
+    <div class="pick">
+      <div class="grid" id="grid"></div>
+      <aside class="detail" id="detail"><div class="empty">แตะรูปฮีโร่ฝั่งศัตรู<br>เพื่อดูว่าใครแก้ทางได้</div></aside>
+    </div>
+  </section>
+
+  <!-- Full table -->
+  <section id="v-table" hidden>
+    <div class="controls">
+      <input type="search" id="q" placeholder="ค้นหาฮีโร่ (ไทย / อังกฤษ)">
+      <div class="tlanes" id="tlanes"></div>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr id="head"></tr></thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <div class="legend">
+    <span id="lg3"></span><span id="lg2"></span><span id="lg1"></span>
+  </div>
+</div>
+<div class="backdrop" id="backdrop"></div>
+
+<script src="heroes.js?v=17" charset="utf-8"></script>
+<script src="counters.js?v=17" charset="utf-8"></script>
+<script>
+const LANES = ["dsl", "jungle", "mid", "adl", "roam"];
+const LANE_TH = { dsl: "ออฟเลน", jungle: "ป่า", mid: "เมจ", adl: "แครี่", roam: "โรม" };
+const BY = Object.fromEntries(HEROES.map(h => [h.slug, h]));
+const lanesOf = s => HERO_LANES[s];
+const plays = (s, L) => lanesOf(s).main === L || lanesOf(s).alt.includes(L);
+const byName = (a, b) => a.en.localeCompare(b.en);
+// Strongest first: SS > S > A > B > C, untiered last, then name.
+const TIER_RANK = { SS: 0, "S+": 0, S: 1, A: 2, B: 3, C: 4 };
+const tierRank = s => TIER_RANK[BY[s].tier] ?? 9;
+const byTier = (a, b) => tierRank(a.slug) - tierRank(b.slug) || byName(a, b);
+// Counters: hardest counter first, then the stronger hero.
+const byCounter = list => [...list].sort((a, b) => b.star - a.star || tierRank(a.s) - tierRank(b.s));
+
+const store = {
+  get(k, d) { try { const v = JSON.parse(localStorage.getItem("rov-" + k)); return v ?? d; } catch { return d; } },
+  set(k, v) { try { localStorage.setItem("rov-" + k, JSON.stringify(v)); } catch {} },
+};
+const state = { view: "pick", lane: store.get("lane", "all"), sel: null, q: "" };
+
+const esc = s => String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+function avatar(h) {
+  const ini = esc(h.en.slice(0, 2));
+  if (!h.img) return `<span class="av">${ini}</span>`;
+  return `<img class="av" src="${esc(h.img)}" alt="" onerror="this.outerHTML='<span class=&quot;av&quot;>${ini}</span>'">`;
+}
+const tier = t => t ? `<span class="tier tier-${t.replace("+", "p")}">${t}</span>` : "";
+const tcls = h => h.tier ? ` t-${h.tier.replace("+", "p")}` : "";
+const frame = (h, badge) => `<span class="frame">${avatar(h)}${badge ? tier(h.tier) : ""}</span>`;
+const STAR = '<svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 1.6l2.6 5.3 5.8.8-4.2 4.1 1 5.8L10 14.9l-5.2 2.7 1-5.8L1.6 7.7l5.8-.8z"/></svg>';
+const stars = n => `<span class="stars" role="img" aria-label="${n} ดาว">` + STAR.repeat(n) + STAR.replace("<svg", '<svg class="off"').repeat(3 - n) + "</span>";
+const laneLine = s => LANE_TH[lanesOf(s).main] + (lanesOf(s).alt.length ? ` · เล่นได้: ${lanesOf(s).alt.map(L => LANE_TH[L]).join(", ")}` : "");
+
+[[3, "แก้ทางแรง"], [2, "แก้ทางได้ดี"], [1, "ได้เปรียบเล็กน้อย"]].forEach(([n, t]) => { document.getElementById("lg" + n).innerHTML = stars(n) + t; });
+document.getElementById("meta").textContent = `แพตช์ ${DATA_PATCH}`;
+
+/* ---------- reasons (shared) ---------- */
+
+/* ---------- views ---------- */
+document.querySelector(".views").onclick = e => {
+  const b = e.target.closest("button"); if (!b) return;
+  state.view = b.dataset.v;
+  document.querySelectorAll(".views button").forEach(x => x.classList.toggle("on", x === b));
+  document.getElementById("v-pick").hidden = state.view !== "pick";
+  document.getElementById("v-table").hidden = state.view !== "table";
+  if (state.view === "table") renderTable();
+  closeSheet();
+};
+
+/* ---------- picker ---------- */
+const lanesEl = document.getElementById("lanes");
+lanesEl.innerHTML = ["all", ...LANES].map(L => `<button data-l="${L}">${L === "all" ? "ทั้งหมด" : LANE_TH[L]}</button>`).join("");
+lanesEl.onclick = e => {
+  const b = e.target.closest("button"); if (!b) return;
+  state.lane = b.dataset.l; store.set("lane", state.lane);
+  renderGrid(); window.scrollTo({ top: 0 });
+};
+
+function renderGrid() {
+  lanesEl.querySelectorAll("button").forEach(b => b.classList.toggle("on", b.dataset.l === state.lane));
+  const tile = h => `<button class="hb${tcls(h)}${h.slug === state.sel ? " sel" : ""}" data-s="${h.slug}">${frame(h, true)}<span class="nm">${esc(h.en)}</span></button>`;
+  let html;
+  if (state.lane === "all") {
+    html = LANES.map(L => `<h4>${LANE_TH[L]}</h4>` + HEROES.filter(h => lanesOf(h.slug).main === L).sort(byTier).map(tile).join("")).join("");
+  } else {
+    const main = HEROES.filter(h => lanesOf(h.slug).main === state.lane).sort(byTier);
+    const flex = HEROES.filter(h => lanesOf(h.slug).alt.includes(state.lane)).sort(byTier);
+    html = main.map(tile).join("") + (flex.length ? `<h4>ลง${LANE_TH[state.lane]}ได้ด้วย</h4>` + flex.map(tile).join("") : "");
+  }
+  document.getElementById("grid").innerHTML = html;
+}
+
+function open(slug) {
+  state.sel = slug;
+  renderDetail(); renderGrid();
+  if (!document.body.classList.contains("sheet-open") && matchMedia("(max-width: 899px)").matches) {
+    document.body.classList.add("sheet-open");
+    try { history.pushState({ sheet: 1 }, ""); } catch {}
+  }
+  document.getElementById("detail").scrollTop = 0;
+}
+function closeSheet() {
+  if (!document.body.classList.contains("sheet-open")) return;
+  document.body.classList.remove("sheet-open");
+  try { if (history.state && history.state.sheet) history.back(); } catch {}
+}
+window.addEventListener("popstate", () => document.body.classList.remove("sheet-open"));
+document.getElementById("backdrop").onclick = closeSheet;
+document.addEventListener("keydown", e => { if (e.key === "Escape") closeSheet(); });
+
+function renderDetail() {
+  const x = state.sel, h = BY[x], c = COUNTERS[x], main = lanesOf(x).main;
+  const tiles = list => `<div class="ctiles">${byCounter(list).map(p => {
+    const C = BY[p.s];
+    return `<button class="ct${tcls(C)}" data-s="${p.s}">${frame(C)}<span class="nm">${esc(C.en)}</span>${stars(p.star)}</button>`;
+  }).join("")}</div>`;
+  const sections = [`<div class="sec same"><h5>เลนเดียวกัน (${LANE_TH[main]})</h5>${tiles(c.same)}</div>`]
+    .concat(LANES.filter(L => L !== main).map(L => `<div class="sec"><h5>${LANE_TH[L]}</h5>${tiles(c[L])}</div>`));
+  const el = document.getElementById("detail");
+  el.innerHTML = `
+    <div class="dh${tcls(h)}">${frame(h)}<div><b>${esc(h.en)}${tier(h.tier)}</b><small>${h.aka ? "หรือ " + esc(h.aka) + " · " : ""}${laneLine(x)}</small>
+      ${!h.weak.length ? '<span class="nodata">ยังไม่เปิดเซิร์ฟไทย ส่วนใหญ่เป็นค่าประเมิน</span>' : ""}</div>
+      <button class="close" aria-label="ปิด"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 5l10 10M15 5L5 15"/></svg></button></div>
+    <div class="dlead">ตัวที่แก้ทาง ${esc(h.en)} ได้</div>
+    ${sections.join("")}`;
+}
+
+document.getElementById("detail").addEventListener("click", e => {
+  if (e.target.closest(".close")) return closeSheet();
+  const t = e.target.closest(".ct"); if (t) open(t.dataset.s);
+});
+document.getElementById("grid").onclick = e => { const b = e.target.closest(".hb"); if (b) open(b.dataset.s); };
+
+/* ---------- full table ---------- */
+document.getElementById("head").innerHTML =
+  `<th>ฮีโร่ → แพ้ทางใคร</th><th class="same">เลนเดียวกัน</th>` + LANES.map(L => `<th>${LANE_TH[L]}</th>`).join("");
+document.getElementById("q").oninput = e => { state.q = e.target.value.trim(); renderTable(); };
+
+function cell(x, list) {
+  return `<div class="ctr">${byCounter(list).map(p => {
+    const h = BY[p.s];
+    return `<div class="c${p.star === 3 ? " s3" : ""}" data-x="${x}" data-c="${p.s}">${avatar(h)}<div><span class="nm">${esc(h.en)}</span>${stars(p.star)}</div></div>`;
+  }).join("")}</div>`;
+}
+function renderTable() {
+  const q = state.q.toLowerCase();
+  const tl = state.tlane || "all";
+  document.getElementById("tlanes").innerHTML = ["all", ...LANES].map(L => `<button data-l="${L}" class="${L === tl ? "on" : ""}">${L === "all" ? "ทั้งหมด" : LANE_TH[L]}</button>`).join("");
+  const rows = HEROES.filter(h => (!q || h.th.includes(state.q) || h.en.toLowerCase().includes(q)) && (tl === "all" || lanesOf(h.slug).main === tl))
+    .sort((a, b) => LANES.indexOf(lanesOf(a.slug).main) - LANES.indexOf(lanesOf(b.slug).main) || byTier(a, b));
+  let lastLane = null;
+  document.getElementById("tbody").innerHTML = rows.map(h => {
+    const c = COUNTERS[h.slug], main = lanesOf(h.slug).main;
+    const head = main !== lastLane ? `<tr class="lane-row"><td colspan="7">${LANE_TH[main]}</td></tr>` : "";
+    lastLane = main;
+    return head + `<tr id="row-${h.slug}">
+      <td><div class="hero${tcls(h)}" data-s="${h.slug}">${frame(h)}<div><b>${esc(h.en)}${tier(h.tier)}</b><span class="alt">${laneLine(h.slug)}</span></div></div></td>
+      <td class="same">${cell(h.slug, c.same)}</td>
+      ${LANES.map(L => L === main ? `<td><span class="dash">—</span></td>` : `<td>${cell(h.slug, c[L])}</td>`).join("")}
+    </tr>`;
+  }).join("") || `<tr><td colspan="7" class="dash">ไม่พบฮีโร่</td></tr>`;
+}
+const tbody = document.getElementById("tbody");
+document.getElementById("tlanes").addEventListener("click", e => {
+  const b = e.target.closest("button"); if (!b) return;
+  state.tlane = b.dataset.l; renderTable();
+});
+tbody.addEventListener("click", e => {
+  const t = e.target.closest(".c, .hero"); if (!t) return;
+  // Tap anything in the table -> open it in the quick view.
+  document.querySelector('.views [data-v="pick"]').click();
+  open(t.dataset.c || t.dataset.s);
+});
+
+renderGrid();
+</script>

@@ -1,0 +1,6 @@
+# local only
+secrt
+.DS_Store
+.claude/
+.cache/
+sources/
