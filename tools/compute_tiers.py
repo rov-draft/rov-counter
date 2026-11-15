@@ -76,7 +76,7 @@ for h in H:
     if h["slug"] in P and (pr := pro_rank(P[h["slug"]])) is not None:
         v.append((pr, 1.5, "pro"))
     if not v:
-        h["tier"] = None
+        h["tier"] = OVERRIDE.get(h["slug"])
         continue
     mean = sum(r * w for r, w, _ in v) / sum(w for _, w, _ in v)
     h["tier"] = next(t for t, cut in zip(ORDER, (0.85, 1.8, 2.6, 3.4, 99)) if mean < cut)

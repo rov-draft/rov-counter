@@ -254,8 +254,8 @@ td.same .c { background: var(--panel); }
 </div>
 <div class="backdrop" id="backdrop"></div>
 
-<script src="heroes.js?v=17" charset="utf-8"></script>
-<script src="counters.js?v=17" charset="utf-8"></script>
+<script src="heroes.js?v=18" charset="utf-8"></script>
+<script src="counters.js?v=18" charset="utf-8"></script>
 <script>
 const LANES = ["dsl", "jungle", "mid", "adl", "roam"];
 const LANE_TH = { dsl: "ออฟเลน", jungle: "ป่า", mid: "เมจ", adl: "แครี่", roam: "โรม" };
@@ -357,7 +357,7 @@ function renderDetail() {
   const el = document.getElementById("detail");
   el.innerHTML = `
     <div class="dh${tcls(h)}">${frame(h)}<div><b>${esc(h.en)}${tier(h.tier)}</b><small>${h.aka ? "หรือ " + esc(h.aka) + " · " : ""}${laneLine(x)}</small>
-      ${!h.weak.length ? '<span class="nodata">ยังไม่เปิดเซิร์ฟไทย ส่วนใหญ่เป็นค่าประเมิน</span>' : ""}</div>
+      </div>
       <button class="close" aria-label="ปิด"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 5l10 10M15 5L5 15"/></svg></button></div>
     <div class="dlead">ตัวที่แก้ทาง ${esc(h.en)} ได้</div>
     ${sections.join("")}`;
